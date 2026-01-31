@@ -31,9 +31,25 @@ export default function ExecutionDetailPage() {
         }
     };
 
+    // Initial fetch
     useEffect(() => {
         fetchExecution();
     }, [id]);
+
+    // Polling for running executions
+    useEffect(() => {
+        if (!execution) return;
+
+        // Only poll if execution is in a non-terminal state
+        const isRunning = execution.status === 'RUNNING' || execution.status === 'PENDING';
+        if (!isRunning) return;
+
+        const pollInterval = setInterval(() => {
+            fetchExecution();
+        }, 2000); // Poll every 2 seconds
+
+        return () => clearInterval(pollInterval);
+    }, [execution?.status, id]);
 
     if (loading) return <LoadingSpinner />;
     if (error) return <ErrorMessage message={error} onRetry={fetchExecution} />;
@@ -97,6 +113,35 @@ export default function ExecutionDetailPage() {
                     </svg>
                 </Link>
             </div>
+
+            {/* Execution Result Banner */}
+            {execution.status === 'SUCCESS' && (
+                <div className="mb-6 p-4 rounded-lg bg-green-900/30 border border-green-700/50 flex items-start gap-3">
+                    <svg className="h-6 w-6 text-green-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        <h3 className="text-green-300 font-semibold">Execution Successful</h3>
+                        <p className="text-green-400/80 text-sm mt-1">
+                            Workflow completed successfully at {execution.finished_at ? new Date(execution.finished_at).toLocaleString() : 'N/A'}
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {execution.status === 'FAILED' && (
+                <div className="mb-6 p-4 rounded-lg bg-red-900/30 border border-red-700/50 flex items-start gap-3">
+                    <svg className="h-6 w-6 text-red-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        <h3 className="text-red-300 font-semibold">Execution Failed</h3>
+                        <p className="text-red-400/80 text-sm mt-1">
+                            Workflow failed at {execution.finished_at ? new Date(execution.finished_at).toLocaleString() : 'N/A'}. Check step executions below for details.
+                        </p>
+                    </div>
+                </div>
+            )}
 
             {/* Step Executions Timeline */}
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
