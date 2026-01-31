@@ -34,6 +34,7 @@ export interface StepExecution {
     input?: Record<string, any>;
     output?: Record<string, any>;
     error?: string;
+    error_type?: string;  // "transient" | "permanent"
     started_at?: string;
     finished_at?: string;
 }

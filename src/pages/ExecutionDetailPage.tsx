@@ -183,8 +183,22 @@ export default function ExecutionDetailPage() {
                                         )}
 
                                         {stepExec.error && (
-                                            <div className="mt-2 p-3 bg-red-500/10 border border-red-500/30 rounded text-sm text-red-400">
-                                                {stepExec.error}
+                                            <div className="mt-2 p-3 bg-red-500/10 border border-red-500/30 rounded">
+                                                {/* Error Type Badge */}
+                                                {stepExec.error_type && (
+                                                    <div className="mb-2">
+                                                        <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${stepExec.error_type === 'transient'
+                                                                ? 'bg-orange-900/30 border border-orange-700/50 text-orange-400'
+                                                                : 'bg-red-900/30 border border-red-700/50 text-red-400'
+                                                            }`}>
+                                                            {stepExec.error_type === 'transient' ? '⚠️ Transient' : '❌ Permanent'}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {/* Error Message */}
+                                                <div className="text-sm text-red-400">
+                                                    {stepExec.error}
+                                                </div>
                                             </div>
                                         )}
 
