@@ -20,6 +20,8 @@ export default function WorkflowDetailPage() {
     // Execution state
     const [isExecuting, setIsExecuting] = useState(false);
     const [executeError, setExecuteError] = useState<string | null>(null);
+    const [triggerInput, setTriggerInput] = useState('{\n  "text": ""\n}');
+    const [triggerInputError, setTriggerInputError] = useState<string | null>(null);
 
     const fetchWorkflow = async () => {
         if (!id) return;
@@ -40,7 +42,20 @@ export default function WorkflowDetailPage() {
         try {
             setIsExecuting(true);
             setExecuteError(null);
-            const result = await executeWorkflow(id, {});
+            let parsedInput: Record<string, unknown> | undefined = undefined;
+            if (triggerInput.trim().length > 0) {
+                try {
+                    parsedInput = JSON.parse(triggerInput);
+                    setTriggerInputError(null);
+                } catch (err) {
+                    setTriggerInputError(err instanceof Error ? err.message : 'Invalid JSON');
+                    setIsExecuting(false);
+                    return;
+                }
+            } else {
+                setTriggerInputError(null);
+            }
+            const result = await executeWorkflow(id, { trigger_input: parsedInput ?? {} });
             // Navigate to execution detail page
             navigate(`/executions/${result.execution_id}`);
         } catch (err) {
@@ -124,6 +139,32 @@ export default function WorkflowDetailPage() {
                         {executeError}
                     </div>
                 )}
+
+                {/* Trigger input */}
+                <div className="mt-6 bg-gray-900 border border-gray-700 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-sm font-medium text-gray-200">Trigger Input (JSON)</h3>
+                        <button
+                            type="button"
+                            className="text-xs text-gray-400 hover:text-gray-200"
+                            onClick={() => setTriggerInput('{\n  "text": ""\n}')}
+                        >
+                            Reset
+                        </button>
+                    </div>
+                    <textarea
+                        value={triggerInput}
+                        onChange={(e) => setTriggerInput(e.target.value)}
+                        rows={6}
+                        className="w-full text-xs text-gray-200 bg-gray-950 border border-gray-700 rounded p-3 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder='{\n  "text": "Summarize this..." \n}'
+                    />
+                    {triggerInputError && (
+                        <div className="mt-2 text-xs text-red-300">
+                            Invalid JSON: {triggerInputError}
+                        </div>
+                    )}
+                </div>
 
                 <div className="mt-4 flex items-center text-sm text-gray-500">
                     <svg
